@@ -1,21 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --color-brand-blue: #004679;
   --color-brand-green: #46946f;
-  --color-brand-grey: #ececec;
-  --color-brand-dark: #0a1128;
-  --color-brand-light: #faf9f7;
-  --color-pearl: #f8f7f4;
+  --color-brand-dark: #060d1f;
 
-  --color-category-csr: #2d8a64;
-  --color-category-levitas: #004679;
-  --color-category-festival: #c97a1a;
-  --color-category-gravitas: #7c3aed;
+  --color-category-csr: #34d399;
+  --color-category-levitas: #38bdf8;
+  --color-category-festival: #fbbf24;
+  --color-category-gravitas: #a78bfa;
 
   --font-sans: "Montserrat", "Inter", sans-serif;
-  --font-nexa: "Montserrat", sans-serif;
 }
 
 @layer base {
@@ -24,118 +20,68 @@
   }
 
   body {
-    @apply transition-colors duration-500 font-sans antialiased overflow-x-hidden;
+    background: #060d1f;
+    color: rgba(255, 255, 255, 0.92);
+    font-family: "Montserrat", "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     margin: 0;
-    background: #f8f7f4;
-    color: #1e293b;
-  }
-
-  .dark body {
-    background: #0a1128;
-    color: rgba(255, 255, 255, 0.9);
+    overflow-x: hidden;
   }
 }
 
-/* ===== LIGHT MODE GLASS (Tinted Glassmorphism) ===== */
+/* Glass styles — dark only, premium */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid rgba(0, 70, 121, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.dark .glass-panel {
-  background: rgba(10, 17, 40, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: none;
-}
-
-/* Calendar grid cells - tinted glass with brand color hint */
-.glass-cell {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(0, 70, 121, 0.04);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-cell:hover {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(0, 70, 121, 0.12);
-  box-shadow: 0 4px 12px rgba(0, 70, 121, 0.06);
-}
-
-.dark .glass-cell {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.dark .glass-cell:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-/* Event-active calendar cells with stronger tint */
-.glass-cell-event {
-  background: rgba(0, 70, 121, 0.04);
-  border: 1px solid rgba(0, 70, 121, 0.08);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-cell-event:hover {
-  background: rgba(0, 70, 121, 0.08);
-  border-color: rgba(0, 70, 121, 0.18);
-  box-shadow: 0 4px 16px rgba(0, 70, 121, 0.08);
-  transform: translateY(-1px);
-}
-
-.dark .glass-cell-event {
   background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark .glass-cell-event:hover {
+.glass-card:hover {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  transform: translateY(-3px);
 }
 
-/* Month header glass */
-.glass-month-header {
-  background: rgba(0, 70, 121, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 70, 121, 0.06);
+/* Timeline glow line */
+.timeline-line {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(56, 189, 248, 0.3) 10%,
+    rgba(0, 70, 121, 0.5) 50%,
+    rgba(70, 148, 111, 0.3) 90%,
+    transparent
+  );
 }
 
-.dark .glass-month-header {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+/* Month marker glow */
+.month-marker {
+  box-shadow:
+    0 0 20px rgba(56, 189, 248, 0.3),
+    0 0 60px rgba(0, 70, 121, 0.15);
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+/* Category dot glow */
+.dot-csr { box-shadow: 0 0 8px rgba(52, 211, 153, 0.5); }
+.dot-levitas { box-shadow: 0 0 8px rgba(56, 189, 248, 0.5); }
+.dot-festival { box-shadow: 0 0 8px rgba(251, 191, 36, 0.5); }
+.dot-gravitas { box-shadow: 0 0 8px rgba(167, 139, 250, 0.5); }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 70, 121, 0.12);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 70, 121, 0.25);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
