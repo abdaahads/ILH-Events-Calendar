@@ -2,7 +2,7 @@ import React from 'react'
 import { Calendar, FileText, Compass, Award, Sparkles, Heart, Tag } from 'lucide-react'
 
 const categoryConfig = {
-  "CSR activity": {
+  "Community": {
     dotColor: "bg-emerald-400",
     dotGlow: "dot-csr",
     borderColor: "border-l-emerald-400",
@@ -10,7 +10,7 @@ const categoryConfig = {
     bgTint: "bg-emerald-400/5",
     badgeClass: "bg-emerald-400/15 text-emerald-400 border-emerald-400/25",
     icon: Heart,
-    label: "CSR"
+    label: "Community"
   },
   "Levitas": {
     dotColor: "bg-sky-400",

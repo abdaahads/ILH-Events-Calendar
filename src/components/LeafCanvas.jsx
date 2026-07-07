@@ -37,7 +37,7 @@ function Leaf({ texturePath, position, scale, rotSpeed, floatSpeed, floatRange, 
         <meshStandardMaterial
           map={texture}
           transparent
-          opacity={0.11}
+          opacity={0.32}
           depthWrite={false}
           side={THREE.DoubleSide}
           roughness={0.8}

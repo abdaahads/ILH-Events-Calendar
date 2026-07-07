@@ -4,20 +4,20 @@ import { CalendarRange, Sparkles, Heart, Compass, Award } from 'lucide-react'
 import EventCard, { categoryConfig } from './EventCard'
 
 const EVENT_DATA = [
-  {"month": "August", "date": "15th", "day": "Saturday", "title": "Independence Day (ILH Unity Drive)", "category": "CSR activity", "notes": ""},
+  {"month": "August", "date": "15th", "day": "Saturday", "title": "Independence Day (ILH Unity Drive)", "category": "Community", "notes": ""},
   {"month": "August", "date": "29th", "day": "Saturday", "title": "Not My Shaadi", "category": "Levitas", "notes": "Freshers"},
   {"month": "September", "date": "21st - 25th", "day": "Mon - Fri", "title": "Ganpati at ILH", "category": "Festival", "notes": "Visarjan on 25th (Friday)"},
   {"month": "September", "date": "1st week", "day": "Monday", "title": "Networking & LinkedIn Workshop", "category": "Gravitas", "notes": "Guest speaker + Brunch"},
-  {"month": "October", "date": "20th", "day": "Tuesday", "title": "ILH Garba Night Glow (calory Burn Fest)", "category": "Festival", "notes": "Practice starting on 15th onwards"},
+  {"month": "October", "date": "20th", "day": "Tuesday", "title": "ILH Garba Night Glow", "category": "Festival", "notes": "Practice starting on 15th onwards"},
   {"month": "November", "date": "8th", "day": "Sunday", "title": "The Festival of Lights", "category": "Festival", "notes": "Diwali celebration"},
   {"month": "November", "date": "17th", "day": "Tuesday", "title": "ILH Football League 4.0", "category": "Levitas", "notes": "17th Tuesday - 21st Saturday"},
   {"month": "December", "date": "4th", "day": "Friday", "title": "Self defence workshop", "category": "Gravitas", "notes": ""},
   {"month": "December", "date": "25th", "day": "Friday", "title": "ILH Winter Fest", "category": "Festival", "notes": "Christmas + New Year Eve"},
-  {"month": "January", "date": "21st", "day": "TBD", "title": "ILH Premier League 5.0 + Republic Day + CSR activity", "category": "CSR activity", "notes": "21st, 22nd, 23rd, 24th and 26th"},
+  {"month": "January", "date": "21st - 24th", "day": "Thu - Sun", "title": "ILH Premier League 5.0", "category": "Levitas", "notes": "Get ready for the ultimate sporting action!"},
+  {"month": "January", "date": "26th", "day": "Tuesday", "title": "Republic Day", "category": "Community", "notes": "Celebrating together as one family"},
   {"month": "February", "date": "6th", "day": "Saturday", "title": "Money & Adulting Workshop", "category": "Gravitas", "notes": ""},
-  {"month": "February", "date": "TBD", "day": "TBD", "title": "Fiesta Prep", "category": "Levitas", "notes": ""},
   {"month": "March", "date": "5th", "day": "Friday", "title": "ILH Annual Fiesta 4.0", "category": "Levitas", "notes": ""},
-  {"month": "March", "date": "TBD", "day": "TBD", "title": "ILH Dastarkhwan", "category": "Festival", "notes": "on occasion of 21st (Iftar Party)"}
+  {"month": "March", "date": "TBD", "day": "TBD", "title": "ILH Dastarkhwan", "category": "Festival", "notes": ""}
 ]
 
 const MONTH_META = {
@@ -83,7 +83,7 @@ export default function EventCalendar() {
             <div className="grid grid-cols-2 gap-3 text-[11px] font-bold">
               <div className="flex items-center gap-2 text-white/80">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 dot-csr"></span>
-                <span>CSR (Giving Back)</span>
+                <span>Community (Giving Back)</span>
               </div>
               <div className="flex items-center gap-2 text-white/80">
                 <span className="w-2.5 h-2.5 rounded-full bg-sky-400 dot-levitas"></span>
