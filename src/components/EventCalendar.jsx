@@ -1,17 +1,17 @@
 import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CalendarRange, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { CalendarRange, ChevronLeft, ChevronRight, Sparkles, X, Info } from 'lucide-react'
 import EventCard, { categoryConfig } from './EventCard'
 
 const EVENT_DATA = [
   {"month": "August", "date": "15th", "day": "Saturday", "title": "Independence Day (ILH Unity Drive)", "category": "Community", "notes": ""},
-  {"month": "August", "date": "29th", "day": "Saturday", "title": "Not My Shaadi", "category": "Levitas", "notes": "Freshers"},
+  {"month": "August", "date": "29th", "day": "Saturday", "title": "Not My Shaadi", "category": "Levitas", "notes": "College Freshers vibe - get dressed up and get ready for a crazy night! 💅🕺"},
   {"month": "September", "date": "21st - 25th", "day": "Mon - Fri", "title": "Ganpati at ILH", "category": "Festival", "notes": "Visarjan on 25th (Friday)"},
-  {"month": "September", "date": "1st week", "day": "Monday", "title": "Networking & LinkedIn Workshop", "category": "Gravitas", "notes": "Guest speaker + Brunch"},
-  {"month": "October", "date": "20th", "day": "Tuesday", "title": "ILH Garba Night Glow", "category": "Festival", "notes": "Practice starting on 15th onwards"},
+  {"month": "September", "date": "6th", "day": "Sunday", "title": "Networking & LinkedIn Workshop", "category": "Gravitas", "notes": "Guest speaker + Brunch 💼"},
+  {"month": "October", "date": "17th", "day": "Saturday", "title": "ILH Garba Night Glow", "category": "Festival", "notes": "Practice starting on 15th onwards 💃"},
   {"month": "November", "date": "8th", "day": "Sunday", "title": "The Festival of Lights", "category": "Festival", "notes": "Diwali celebration"},
-  {"month": "November", "date": "17th", "day": "Tuesday", "title": "ILH Football League 4.0", "category": "Levitas", "notes": "17th Tuesday - 21st Saturday"},
-  {"month": "December", "date": "4th", "day": "Friday", "title": "Self defence workshop", "category": "Gravitas", "notes": ""},
+  {"month": "November", "date": "18th - 21st", "day": "Wed - Sat", "title": "ILH Football League 4.0", "category": "Levitas", "notes": "18th Wednesday - 21st Saturday ⚽"},
+  {"month": "December", "date": "6th", "day": "Sunday", "title": "Self defence workshop", "category": "Gravitas", "notes": "Safety first, empower yourself! 🛡️"},
   {"month": "December", "date": "25th", "day": "Friday", "title": "ILH Winter Fest", "category": "Festival", "notes": "Christmas + New Year Eve"},
   {"month": "January", "date": "21st - 24th", "day": "Thu - Sun", "title": "ILH Premier League 5.0", "category": "Levitas", "notes": "Get ready for the ultimate sporting action!"},
   {"month": "January", "date": "26th", "day": "Tuesday", "title": "Republic Day", "category": "Community", "notes": "Celebrating together as one family"},
@@ -33,15 +33,13 @@ const MONTHS_CONFIG = [
 
 const DAYS_HEADER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-// Map dates into arrays of day numbers for calendar highlighting
 function parseEventDays(event) {
   const d = event.date
   const m = event.month
 
   const singleMatch = d.match(/^(\d+)(?:st|nd|rd|th)$/)
   if (singleMatch) {
-    const day = parseInt(singleMatch[1])
-    return [day]
+    return [parseInt(singleMatch[1])]
   }
 
   const rangeMatch = d.match(/^(\d+)(?:st|nd|rd|th)\s*-\s*(\d+)(?:st|nd|rd|th)$/)
@@ -71,8 +69,8 @@ function buildMonthGrid(year, jsMonth) {
 }
 
 export default function EventCalendar() {
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(0) // August 2026 initially
-  const [selectedDay, setSelectedDay] = useState(null) // selected day in calendar
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(0)
+  const [activeOverlayEvents, setActiveOverlayEvents] = useState(null) // for clicked dates / details modal
 
   const activeMonthConfig = MONTHS_CONFIG[currentMonthIndex]
 
@@ -101,24 +99,15 @@ export default function EventCalendar() {
     return monthEvents.filter(e => parseEventDays(e).length === 0)
   }, [monthEvents])
 
-  // Handle month switching
   const handlePrevMonth = () => {
-    setSelectedDay(null)
+    setActiveOverlayEvents(null)
     setCurrentMonthIndex(prev => (prev === 0 ? MONTHS_CONFIG.length - 1 : prev - 1))
   }
 
   const handleNextMonth = () => {
-    setSelectedDay(null)
+    setActiveOverlayEvents(null)
     setCurrentMonthIndex(prev => (prev === MONTHS_CONFIG.length - 1 ? 0 : prev + 1))
   }
-
-  // Events of currently selected day (or all events of the month if no day selected)
-  const displayedEvents = useMemo(() => {
-    if (selectedDay) {
-      return dayEventMap[selectedDay] || []
-    }
-    return monthEvents
-  }, [selectedDay, dayEventMap, monthEvents])
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-8 sm:px-6">
@@ -143,7 +132,7 @@ export default function EventCalendar() {
             At Ivy League House, we don&apos;t just throw events to check boxes. We build them because they are the foundation of what ILH stands for: <strong className="text-white font-bold">the absolute best resident experience</strong> we can offer.
           </p>
 
-          {/* Quick Stats / Category Legend */}
+          {/* Pillars Legend */}
           <div className="pt-4 border-t border-white/8">
             <div className="grid grid-cols-2 gap-3 text-[10px] sm:text-[11px] font-bold">
               <div className="flex items-center gap-2 text-white/80">
@@ -168,163 +157,185 @@ export default function EventCalendar() {
       </motion.div>
 
       {/* === CALENDAR CONTAINER === */}
-      <div className="glass-panel rounded-3xl border border-white/10 overflow-hidden mb-6">
-        {/* Month Selector Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 bg-white/3">
-          <button
-            onClick={handlePrevMonth}
-            className="p-2 rounded-xl bg-white/5 border border-white/8 hover:bg-white/10 text-white active:scale-90 transition-all duration-150"
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          <div className="text-center">
-            <span className="text-2xl mr-1.5">{activeMonthConfig.emoji}</span>
-            <span className="text-lg font-black tracking-wide uppercase text-white">
-              {activeMonthConfig.name}
-            </span>
-            <span className="text-xs font-bold text-white/40 ml-2">{activeMonthConfig.year}</span>
-            <p className="text-[10px] text-white/40 font-semibold italic mt-0.5">
-              {activeMonthConfig.vibe}
-            </p>
-          </div>
-
-          <button
-            onClick={handleNextMonth}
-            className="p-2 rounded-xl bg-white/5 border border-white/8 hover:bg-white/10 text-white active:scale-90 transition-all duration-150"
-            aria-label="Next month"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Calendar Grid */}
-        <div className="p-4 sm:p-5">
-          {/* Days of Week */}
-          <div className="grid grid-cols-7 gap-1.5 mb-3">
-            {DAYS_HEADER.map(d => (
-              <div key={d} className="text-center text-[10px] sm:text-xs font-black uppercase tracking-widest text-white/30">
-                {d}
-              </div>
-            ))}
-          </div>
-
-          {/* Days of Month Grid */}
-          <div className="grid grid-cols-7 gap-1.5">
-            {monthGridCells.map((cell, idx) => {
-              if (cell.day === null) {
-                return <div key={`empty-${idx}`} className="aspect-square" />
-              }
-
-              const dayEvents = dayEventMap[cell.day] || []
-              const hasEvent = dayEvents.length > 0
-              const isSelected = selectedDay === cell.day
-
-              // Highlight active event cells with glowing border/bg tints
-              let cellClass = "glass-cell text-white/50"
-              let borderStyle = {}
-
-              if (hasEvent) {
-                const primaryEvent = dayEvents[0]
-                const cfg = categoryConfig[primaryEvent.category]
-                cellClass = `glass-cell-event border border-${cfg?.dotColor.replace('bg-', '')}/30 text-white font-bold`
-                if (isSelected) {
-                  cellClass += " ring-2 ring-white/50 scale-105"
-                }
-              } else if (isSelected) {
-                cellClass += " ring-2 ring-white/20 scale-105"
-              }
-
-              return (
-                <button
-                  key={cell.day}
-                  onClick={() => setSelectedDay(isSelected ? null : cell.day)}
-                  className={`aspect-square rounded-2xl flex flex-col items-center justify-center relative transition-all duration-200 cursor-pointer ${cellClass}`}
-                >
-                  <span className="text-xs sm:text-sm">{cell.day}</span>
-                  
-                  {/* Glowing Event Dots */}
-                  {hasEvent && (
-                    <div className="flex gap-0.5 mt-1">
-                      {dayEvents.slice(0, 3).map((ev, i) => {
-                        const cfg = categoryConfig[ev.category]
-                        return (
-                          <span key={i} className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${cfg?.dotColor || 'bg-gray-400'} ${cfg?.dotGlow || ''}`} />
-                        )
-                      })}
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* === EVENTS DRAWER / DETAILS LIST === */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest text-white/40">
-            {selectedDay 
-              ? `Events on ${activeMonthConfig.name} ${selectedDay}`
-              : `All Events in ${activeMonthConfig.name}`
-            }
-          </h3>
-          {selectedDay && (
+      <div className="glass-panel rounded-3xl border border-white/10 overflow-hidden mb-6 relative min-h-[400px] flex flex-col justify-between">
+        <div>
+          {/* Month Selector Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 bg-white/3">
             <button
-              onClick={() => setSelectedDay(null)}
-              className="text-[10px] font-extrabold uppercase tracking-widest text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-400/20 active:scale-95 transition-all"
+              onClick={handlePrevMonth}
+              className="p-2 rounded-xl bg-white/5 border border-white/8 hover:bg-white/10 text-white active:scale-90 transition-all duration-150"
+              aria-label="Previous month"
             >
-              Show all month
+              <ChevronLeft className="w-4 h-4" />
             </button>
-          )}
+
+            <div className="text-center">
+              <span className="text-2xl mr-1.5">{activeMonthConfig.emoji}</span>
+              <span className="text-lg font-black tracking-wide uppercase text-white">
+                {activeMonthConfig.name}
+              </span>
+              <span className="text-xs font-bold text-white/40 ml-2">{activeMonthConfig.year}</span>
+              <p className="text-[10px] text-white/40 font-semibold italic mt-0.5">
+                {activeMonthConfig.vibe}
+              </p>
+            </div>
+
+            <button
+              onClick={handleNextMonth}
+              className="p-2 rounded-xl bg-white/5 border border-white/8 hover:bg-white/10 text-white active:scale-90 transition-all duration-150"
+              aria-label="Next month"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Calendar Grid & Days of Week */}
+          <div className="p-4 sm:p-5 relative">
+            <div className="grid grid-cols-7 gap-1.5 mb-3">
+              {DAYS_HEADER.map(d => (
+                <div key={d} className="text-center text-[10px] sm:text-xs font-black uppercase tracking-widest text-white/30">
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1.5">
+              {monthGridCells.map((cell, idx) => {
+                if (cell.day === null) {
+                  return <div key={`empty-${idx}`} className="aspect-square" />
+                }
+
+                const dayEvents = dayEventMap[cell.day] || []
+                const hasEvent = dayEvents.length > 0
+
+                let cellClass = "glass-cell text-white/40"
+                if (hasEvent) {
+                  const primaryEvent = dayEvents[0]
+                  const cfg = categoryConfig[primaryEvent.category]
+                  cellClass = `glass-cell-event border border-${cfg?.dotColor.replace('bg-', '')}/30 text-white font-bold`
+                }
+
+                return (
+                  <div
+                    key={cell.day}
+                    className="relative group aspect-square"
+                  >
+                    <button
+                      onClick={() => hasEvent && setActiveOverlayEvents({ type: 'date', title: `${activeMonthConfig.name} ${cell.day}`, events: dayEvents })}
+                      className={`w-full h-full rounded-2xl flex flex-col items-center justify-center relative transition-all duration-200 ${cellClass}`}
+                    >
+                      <span className="text-xs sm:text-sm">{cell.day}</span>
+                      
+                      {hasEvent && (
+                        <div className="flex gap-0.5 mt-1">
+                          {dayEvents.slice(0, 3).map((ev, i) => {
+                            const cfg = categoryConfig[ev.category]
+                            return (
+                              <span key={i} className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${cfg?.dotColor || 'bg-gray-400'} ${cfg?.dotGlow || ''}`} />
+                            )
+                          })}
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Hover Tooltip (Desktop) */}
+                    {hasEvent && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 hidden md:group-hover:block pointer-events-none z-30 bg-[#0a1128]/95 backdrop-blur border border-white/12 p-3.5 rounded-2xl shadow-2xl space-y-1.5">
+                        {dayEvents.map((ev, i) => {
+                          const cfg = categoryConfig[ev.category]
+                          return (
+                            <div key={i} className="space-y-1">
+                              <span className={`text-[9px] font-extrabold uppercase tracking-widest ${cfg?.accentColor}`}>
+                                {cfg?.label}
+                              </span>
+                              <p className="text-xs font-bold text-white leading-tight">
+                                {ev.title}
+                              </p>
+                              {ev.notes && (
+                                <p className="text-[10px] text-white/45 italic leading-normal">
+                                  {ev.notes}
+                                </p>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <AnimatePresence mode="popLayout">
-            {displayedEvents.length > 0 ? (
-              displayedEvents.map((event, i) => (
-                <motion.div
-                  key={`${event.title}-${i}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25, delay: i * 0.05 }}
+        {/* TBD Events Banner inside calendar panel (since no days below it) */}
+        {tbdEvents.length > 0 && (
+          <div className="px-5 py-4 bg-white/2 border-t border-white/6 flex items-center justify-between flex-wrap gap-2.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-white/40 flex items-center gap-1.5">
+              <Info className="w-3.5 h-3.5 text-white/30" />
+              <span>Dates to be announced</span>
+            </span>
+            <div className="flex gap-2 flex-wrap">
+              {tbdEvents.map((event, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveOverlayEvents({ type: 'tbd', title: event.title, events: [event] })}
+                  className="px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/8 text-[11px] font-bold text-white tracking-wide active:scale-95 transition-all duration-150"
                 >
-                  <EventCard event={event} />
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-8 glass-panel rounded-2xl border border-white/5 text-white/35 text-xs font-semibold"
-              >
-                No events scheduled on this day 😴
-              </motion.div>
-            )}
+                  📌 {event.title}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-            {/* Display TBD/date-less events at the bottom if viewing the entire month */}
-            {!selectedDay && tbdEvents.length > 0 && (
-              <div className="pt-2 border-t border-white/5 space-y-4">
-                <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/30 px-1">
-                  📌 Dates to be announced bestie
-                </p>
-                {tbdEvents.map((event, i) => (
+        {/* === DETAILED EVENT OVERLAY MODAL === */}
+        <AnimatePresence>
+          {activeOverlayEvents && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-[#060d1f]/95 backdrop-blur-lg z-40 p-5 sm:p-6 flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between border-b border-white/8 pb-3">
+                <span className="text-xs font-black uppercase tracking-widest text-white/40">
+                  {activeOverlayEvents.type === 'tbd' ? 'Coming Soon Bestie' : `Events on ${activeOverlayEvents.title}`}
+                </span>
+                <button
+                  onClick={() => setActiveOverlayEvents(null)}
+                  className="p-1.5 rounded-lg bg-white/5 border border-white/8 hover:bg-white/10 text-white active:scale-90 transition-all"
+                  aria-label="Close details"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 py-6 overflow-y-auto space-y-4 justify-center flex flex-col no-scrollbar">
+                {activeOverlayEvents.events.map((event, i) => (
                   <motion.div
-                    key={`tbd-${event.title}-${i}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key={i}
+                    initial={{ scale: 0.95, y: 10 }}
+                    animate={{ scale: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
                   >
                     <EventCard event={event} />
                   </motion.div>
                 ))}
               </div>
-            )}
-          </AnimatePresence>
-        </div>
+
+              <div className="text-center text-[10px] font-bold text-white/30 uppercase tracking-widest pt-2 border-t border-white/5">
+                tap close to return to calendar
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      {/* Helpful mobile hint */}
+      <p className="text-center text-[10px] text-white/30 font-bold uppercase tracking-widest mt-4">
+        💡 Tap any highlighted date or TBD button to see the vibe details!
+      </p>
     </div>
   )
 }
