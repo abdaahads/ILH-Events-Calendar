@@ -3,8 +3,8 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { useTexture, Float } from '@react-three/drei'
 import * as THREE from 'three'
 
-/* ─── A single floating leaf with real 3D rotation ─── */
-function Leaf({ texturePath, position, scale, rotSpeed, floatSpeed, floatRange }) {
+/* ─── A single floating leaf with real 3D rotation and touch/cursor interaction ─── */
+function Leaf({ texturePath, position, scale, rotSpeed, floatSpeed, floatRange, parallaxFactor }) {
   const ref = useRef()
   const texture = useTexture(texturePath)
   const phase = useMemo(() => Math.random() * Math.PI * 2, [])
@@ -13,10 +13,16 @@ function Leaf({ texturePath, position, scale, rotSpeed, floatSpeed, floatRange }
     if (!ref.current) return
     const t = state.clock.getElapsedTime()
 
-    // Full 3D rotation — not just spinning flat, but tumbling in space
+    // Full 3D tumbling
     ref.current.rotation.x = Math.sin(t * rotSpeed * 0.3 + phase) * 0.6
     ref.current.rotation.y = Math.cos(t * rotSpeed * 0.2 + phase * 1.3) * 0.8
     ref.current.rotation.z += rotSpeed * 0.001
+
+    // Drifting based on touch/cursor coordinates
+    const targetX = position[0] + state.pointer.x * parallaxFactor * 0.5
+    const targetY = position[1] + state.pointer.y * parallaxFactor * 0.5
+    ref.current.position.x = THREE.MathUtils.lerp(ref.current.position.x, targetX, 0.02)
+    ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, targetY, 0.02)
   })
 
   return (
@@ -24,14 +30,14 @@ function Leaf({ texturePath, position, scale, rotSpeed, floatSpeed, floatRange }
       speed={floatSpeed}
       rotationIntensity={0}
       floatIntensity={floatRange}
-      floatingRange={[-0.3, 0.3]}
+      floatingRange={[-0.2, 0.2]}
     >
-      <mesh ref={ref} position={position} scale={scale}>
+      <mesh ref={ref} scale={scale}>
         <planeGeometry args={[2, 2, 1, 1]} />
         <meshStandardMaterial
           map={texture}
           transparent
-          opacity={0.22}
+          opacity={0.11}
           depthWrite={false}
           side={THREE.DoubleSide}
           roughness={0.8}
@@ -74,16 +80,16 @@ function Orb({ position, color, size }) {
 /* ─── Full 3D scene ─── */
 function Scene() {
   const leaves = useMemo(() => [
-    // Near leaves — larger, more visible rotation
-    { texturePath: '/ILH leaf - Green.png', position: [-3, 2, -3], scale: 1.8, rotSpeed: 0.5, floatSpeed: 1.2, floatRange: 1.5 },
-    { texturePath: '/ILH leaf - Blue.png', position: [3.5, 3, -4], scale: 2.2, rotSpeed: -0.4, floatSpeed: 1.0, floatRange: 1.2 },
-    // Mid leaves
-    { texturePath: '/ILH leaf - Green.png', position: [3, -2.5, -5], scale: 1.5, rotSpeed: 0.6, floatSpeed: 0.8, floatRange: 1.0 },
-    { texturePath: '/ILH leaf - Blue.png', position: [-3.5, -3, -4.5], scale: 2.0, rotSpeed: -0.35, floatSpeed: 1.1, floatRange: 1.3 },
-    // Far leaves — backdrop depth
-    { texturePath: '/ILH leaf - Green.png', position: [-1, 4, -7], scale: 3.0, rotSpeed: 0.2, floatSpeed: 0.6, floatRange: 0.8 },
-    { texturePath: '/ILH leaf - Blue.png', position: [1.5, -4.5, -6], scale: 2.5, rotSpeed: -0.25, floatSpeed: 0.7, floatRange: 0.9 },
-    { texturePath: '/ILH leaf - Blue.png', position: [-4, 0, -8], scale: 3.5, rotSpeed: 0.15, floatSpeed: 0.5, floatRange: 0.6 },
+    // Near leaves — larger, more visible rotation & high parallax
+    { texturePath: '/ILH leaf - Green.png', position: [-3, 2, -3], scale: 1.8, rotSpeed: 0.5, floatSpeed: 1.2, floatRange: 1.5, parallaxFactor: 0.8 },
+    { texturePath: '/ILH leaf - Blue.png', position: [3.5, 3, -4], scale: 2.2, rotSpeed: -0.4, floatSpeed: 1.0, floatRange: 1.2, parallaxFactor: 0.9 },
+    // Mid leaves — moderate parallax
+    { texturePath: '/ILH leaf - Green.png', position: [3, -2.5, -5], scale: 1.5, rotSpeed: 0.6, floatSpeed: 0.8, floatRange: 1.0, parallaxFactor: 0.5 },
+    { texturePath: '/ILH leaf - Blue.png', position: [-3.5, -3, -4.5], scale: 2.0, rotSpeed: -0.35, floatSpeed: 1.1, floatRange: 1.3, parallaxFactor: 0.6 },
+    // Far leaves — low parallax for depth depth
+    { texturePath: '/ILH leaf - Green.png', position: [-1, 4, -7], scale: 3.0, rotSpeed: 0.2, floatSpeed: 0.6, floatRange: 0.8, parallaxFactor: 0.2 },
+    { texturePath: '/ILH leaf - Blue.png', position: [1.5, -4.5, -6], scale: 2.5, rotSpeed: -0.25, floatSpeed: 0.7, floatRange: 0.9, parallaxFactor: 0.3 },
+    { texturePath: '/ILH leaf - Blue.png', position: [-4, 0, -8], scale: 3.5, rotSpeed: 0.15, floatSpeed: 0.5, floatRange: 0.6, parallaxFactor: 0.15 },
   ], [])
 
   const orbs = useMemo(() => [
