@@ -1,41 +1,40 @@
 import React from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Moon, Zap } from 'lucide-react'
 
 export default function Header({ isDark, onToggleTheme }) {
   return (
-    <header className="sticky top-0 z-50 w-full glass-panel border-b border-black/5 dark:border-white/10 px-6 py-4 flex items-center justify-between transition-all duration-300">
-      <div className="flex items-center gap-4">
-        {/* Dynamic logo based on light/dark mode */}
+    <header className="sticky top-0 z-50 w-full glass-panel px-4 sm:px-6 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-3">
         <img 
           src={isDark ? "/ILH Website - White logo for animation.png" : "/ILH Logo - RGB-COL- Standard Usage - Horizontal Format.png"} 
           alt="ILH Ivy League House Logo" 
-          className="h-10 w-auto object-contain hover:scale-105 transition-transform duration-300"
+          className="h-8 sm:h-9 w-auto object-contain"
         />
-        <div className="h-6 w-[1px] bg-black/10 dark:bg-white/20 hidden sm:block"></div>
-        <div className="hidden sm:block">
-          <p className="font-nexa font-extrabold text-lg tracking-wide uppercase text-slate-700 dark:text-white/90">
+        <div className="h-5 w-[1px] bg-brand-blue/10 dark:bg-white/15 hidden sm:block"></div>
+        <div className="hidden sm:flex items-center gap-1.5">
+          <span className="font-extrabold text-xs tracking-widest uppercase text-brand-blue dark:text-white/80">
             Tathawade
-          </p>
+          </span>
+          <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
         <div className="text-right hidden xs:block">
-          <h1 className="text-lg sm:text-xl font-nexa font-extrabold tracking-wide uppercase text-slate-800 dark:text-white leading-none">
+          <h1 className="text-sm sm:text-base font-extrabold tracking-widest uppercase text-slate-800 dark:text-white leading-none">
             Event Calendar
           </h1>
-          <p className="text-[10px] sm:text-xs text-slate-500 dark:text-white/50 font-medium mt-1 tracking-widest uppercase">
-            Ivy League House • 2026-2027
+          <p className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-0.5 tracking-[0.2em] uppercase">
+            the ultimate hostel szn guide 🗓️
           </p>
         </div>
 
-        {/* Theme Toggle Button */}
         <button
           onClick={onToggleTheme}
-          className="p-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-white/40 dark:bg-white/5 hover:bg-white/70 dark:hover:bg-white/10 text-slate-700 dark:text-yellow-400 hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm"
+          className="p-2 rounded-xl border border-brand-blue/8 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 text-slate-600 dark:text-amber-400 active:scale-90 transition-all duration-200"
           aria-label="Toggle theme"
         >
-          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5 text-slate-700" />}
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
       </div>
     </header>

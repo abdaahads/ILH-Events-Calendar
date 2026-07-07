@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Sparkles, Calendar, Info, MapPin } from 'lucide-react'
-import EventCard from './EventCard'
+import React, { useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
+import { CalendarRange } from 'lucide-react'
+import EventCard, { categoryConfig } from './EventCard'
 
 const EVENT_DATA = [
   {"month": "August", "date": "15th", "day": "Saturday", "title": "Independence Day (ILH Unity Drive)", "category": "CSR activity", "notes": ""},
@@ -20,315 +20,241 @@ const EVENT_DATA = [
   {"month": "March", "date": "TBD", "day": "TBD", "title": "ILH Dastarkhwan", "category": "Festival", "notes": "on occasion of 21st (Iftar Party)"}
 ]
 
-// Chronological months with their corresponding calendar year
 const MONTHS_CONFIG = [
-  { name: "August", year: 2026, index: 7 },
-  { name: "September", year: 2026, index: 8 },
-  { name: "October", year: 2026, index: 9 },
-  { name: "November", year: 2026, index: 10 },
-  { name: "December", year: 2026, index: 11 },
-  { name: "January", year: 2027, index: 0 },
-  { name: "February", year: 2027, index: 1 },
-  { name: "March", year: 2027, index: 2 }
+  { name: "August",    year: 2026, jsMonth: 7,  emoji: "🇮🇳", vibe: "Freedom & Freshers szn" },
+  { name: "September", year: 2026, jsMonth: 8,  emoji: "🎉", vibe: "Ganpati Bappa Morya!" },
+  { name: "October",   year: 2026, jsMonth: 9,  emoji: "💃", vibe: "Garba nights hit different" },
+  { name: "November",  year: 2026, jsMonth: 10, emoji: "🪔", vibe: "Diwali + Football era" },
+  { name: "December",  year: 2026, jsMonth: 11, emoji: "🎄", vibe: "Winter Fest loading…" },
+  { name: "January",   year: 2027, jsMonth: 0,  emoji: "🏏", vibe: "New year, new league" },
+  { name: "February",  year: 2027, jsMonth: 1,  emoji: "💰", vibe: "Adulting is real, fam" },
+  { name: "March",     year: 2027, jsMonth: 2,  emoji: "🎊", vibe: "Grand Finale szn" }
 ]
 
-const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const DAYS_HEADER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-// Map categories to theme colors
-const categoryColors = {
-  "CSR activity": "bg-emerald-500 text-emerald-400 border-emerald-500/30",
-  "Levitas": "bg-sky-500 text-sky-400 border-sky-500/30",
-  "Festival": "bg-amber-500 text-amber-400 border-amber-500/30",
-  "Gravitas": "bg-purple-500 text-purple-400 border-purple-500/30"
+function parseEventDays(event) {
+  const d = event.date
+  const m = event.month
+
+  const singleMatch = d.match(/^(\d+)(?:st|nd|rd|th)$/)
+  if (singleMatch) {
+    const day = parseInt(singleMatch[1])
+    if (m === "January" && day === 21) return [21, 22, 23, 24, 26]
+    if (m === "November" && day === 17) return [17, 18, 19, 20, 21]
+    return [day]
+  }
+
+  const rangeMatch = d.match(/^(\d+)(?:st|nd|rd|th)\s*-\s*(\d+)(?:st|nd|rd|th)$/)
+  if (rangeMatch) {
+    const start = parseInt(rangeMatch[1])
+    const end = parseInt(rangeMatch[2])
+    const days = []
+    for (let i = start; i <= end; i++) days.push(i)
+    return days
+  }
+
+  if (d === "1st week") {
+    if (m === "September") return [1, 2, 3, 4]
+    return [1, 2, 3, 4, 5]
+  }
+
+  return []
 }
 
-// Function to map a date string to specific days on the grid
-const getEventDays = (dateStr, monthName) => {
-  if (dateStr === "15th") return [15]
-  if (dateStr === "29th") return [29]
-  if (dateStr === "20th") return [20]
-  if (dateStr === "8th") return [8]
-  if (dateStr === "4th") return [4]
-  if (dateStr === "25th") return [25]
-  if (dateStr === "6th") return [6]
-  if (dateStr === "5th") return [5]
-  
-  // Ranges and specials
-  if (dateStr === "21st - 25th") return [21, 22, 23, 24, 25]
-  if (dateStr === "17th") return [17, 18, 19, 20, 21] // Football league 17-21st
-  if (dateStr === "21st" && monthName === "January") return [21, 22, 23, 24, 25, 26] // CSR + Premier League
-  if (dateStr === "1st week" && monthName === "September") return [7] // 1st Monday in Sep 2026 is Sep 7th
-  
-  return [] // TBD or unmappable
+function buildMonthGrid(monthConfig) {
+  const { year, jsMonth } = monthConfig
+  const startDay = new Date(year, jsMonth, 1).getDay()
+  const totalDays = new Date(year, jsMonth + 1, 0).getDate()
+  const cells = []
+  for (let i = 0; i < startDay; i++) cells.push({ day: null })
+  for (let d = 1; d <= totalDays; d++) cells.push({ day: d })
+  return cells
+}
+
+function MonthBlock({ monthConfig, events, index }) {
+  const [expandedDay, setExpandedDay] = useState(null)
+  const cells = useMemo(() => buildMonthGrid(monthConfig), [monthConfig])
+
+  const dayEventMap = useMemo(() => {
+    const map = {}
+    events.forEach(event => {
+      parseEventDays(event).forEach(day => {
+        if (!map[day]) map[day] = []
+        // Avoid duplicates for multi-day events
+        if (!map[day].find(e => e.title === event.title)) {
+          map[day].push(event)
+        }
+      })
+    })
+    return map
+  }, [events])
+
+  const tbdEvents = useMemo(() => events.filter(e => parseEventDays(e).length === 0), [events])
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.45, delay: index * 0.04 }}
+    >
+      {/* Month Header — fun vibes */}
+      <div className="glass-month-header rounded-t-2xl px-5 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xl">{monthConfig.emoji}</span>
+          <div>
+            <h2 className="text-base sm:text-lg font-extrabold tracking-wide uppercase text-brand-blue dark:text-white leading-none">
+              {monthConfig.name} <span className="text-xs font-bold text-slate-400 dark:text-slate-500 normal-case tracking-normal">{monthConfig.year}</span>
+            </h2>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5 italic">
+              {monthConfig.vibe}
+            </p>
+          </div>
+        </div>
+        {events.length > 0 && (
+          <span className="text-[10px] font-bold uppercase tracking-widest text-brand-blue/60 dark:text-sky-400/60 bg-brand-blue/5 dark:bg-sky-400/10 px-2.5 py-1 rounded-full border border-brand-blue/10 dark:border-sky-400/20">
+            {events.length} event{events.length > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
+      {/* Grid */}
+      <div className="glass-panel rounded-b-2xl rounded-t-none border-t-0 p-3 sm:p-4">
+        <div className="grid grid-cols-7 gap-1 mb-1.5">
+          {DAYS_HEADER.map(d => (
+            <div key={d} className="text-center text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 py-0.5">
+              {d}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1">
+          {cells.map((cell, idx) => {
+            if (cell.day === null) return <div key={`e-${idx}`} className="aspect-square" />
+
+            const dayEvents = dayEventMap[cell.day] || []
+            const hasEvent = dayEvents.length > 0
+            const isExpanded = expandedDay === cell.day && hasEvent
+
+            return (
+              <div
+                key={cell.day}
+                onClick={() => hasEvent && setExpandedDay(isExpanded ? null : cell.day)}
+                className={`aspect-square rounded-lg sm:rounded-xl flex flex-col items-center justify-center relative transition-all duration-200 ${
+                  hasEvent ? 'glass-cell-event' : 'glass-cell'
+                } ${isExpanded ? 'ring-2 ring-brand-blue/30 dark:ring-sky-400/40 scale-105' : ''}`}
+              >
+                <span className={`text-[11px] sm:text-sm font-bold leading-none ${
+                  hasEvent ? 'text-slate-800 dark:text-white' : 'text-slate-300 dark:text-slate-700'
+                }`}>
+                  {cell.day}
+                </span>
+
+                {hasEvent && (
+                  <div className="flex gap-[2px] mt-[3px]">
+                    {dayEvents.slice(0, 3).map((ev, i) => {
+                      const cfg = categoryConfig[ev.category]
+                      return <span key={i} className={`w-[5px] h-[5px] sm:w-1.5 sm:h-1.5 rounded-full ${cfg?.dotColor || 'bg-gray-400'}`} />
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Expanded day details */}
+        {expandedDay && dayEventMap[expandedDay] && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 space-y-2.5"
+          >
+            <p className="text-[10px] font-extrabold uppercase tracking-widest text-brand-blue/50 dark:text-sky-400/50">
+              📍 {monthConfig.name} {expandedDay}
+            </p>
+            {dayEventMap[expandedDay].map((event, i) => (
+              <div key={i} className="p-3 rounded-xl bg-white/70 dark:bg-white/6 border border-slate-200/80 dark:border-white/10">
+                <EventCard event={event} />
+              </div>
+            ))}
+          </motion.div>
+        )}
+
+        {tbdEvents.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 space-y-2.5">
+            <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              📌 Date TBD — stay tuned bestie
+            </p>
+            {tbdEvents.map((event, i) => (
+              <div key={i} className="p-3 rounded-xl bg-white/50 dark:bg-white/4 border border-dashed border-slate-200 dark:border-white/10">
+                <EventCard event={event} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.section>
+  )
 }
 
 export default function EventCalendar() {
-  const [currentMonthIdx, setCurrentMonthIdx] = useState(0) // August 2026 is index 0
-  const [selectedEventId, setSelectedEventId] = useState(null)
-
-  const activeMonth = MONTHS_CONFIG[currentMonthIdx]
-
-  // Filter events belonging to current active month
-  const monthEvents = useMemo(() => {
-    return EVENT_DATA.filter(event => event.month === activeMonth.name)
-  }, [activeMonth])
-
-  // Split into grid-mappable events and non-mappable (TBD / Highlights)
-  const { gridEvents, tbdEvents } = useMemo(() => {
-    const grid = []
-    const tbd = []
-    monthEvents.forEach((e, idx) => {
-      const days = getEventDays(e.date, activeMonth.name)
-      const id = `${e.title}-${idx}`
-      const enrichedEvent = { ...e, id, mappedDays: days }
-      if (days.length > 0) {
-        grid.push(enrichedEvent)
-      } else {
-        tbd.push(enrichedEvent)
-      }
-    })
-    return { gridEvents: grid, tbdEvents: tbd }
-  }, [monthEvents, activeMonth])
-
-  // Selected event highlights mapping
-  const activeEvent = useMemo(() => {
-    if (!selectedEventId) return null
-    return monthEvents.find((e, idx) => `${e.title}-${idx}` === selectedEventId)
-  }, [selectedEventId, monthEvents])
-
-  // Generate calendar grid details using Date API
-  const gridCells = useMemo(() => {
-    const { year, index } = activeMonth
-    // Get start day index of the month (0 = Sunday, 1 = Monday, etc.)
-    const startDayIndex = new Date(year, index, 1).getDay()
-    // Get number of days in the month
-    const totalDays = new Date(year, index + 1, 0).getDate()
-
-    const cells = []
-
-    // Padding empty cells before day 1
-    for (let i = 0; i < startDayIndex; i++) {
-      cells.push({ dayNumber: null, isPlaceholder: true, events: [] })
-    }
-
-    // Days in the month
-    for (let day = 1; day <= totalDays; day++) {
-      // Find events matching this day
-      const matchingEvents = gridEvents.filter(e => e.mappedDays.includes(day))
-      cells.push({
-        dayNumber: day,
-        isPlaceholder: false,
-        events: matchingEvents
-      })
-    }
-
-    return cells
-  }, [activeMonth, gridEvents])
-
-  // Nav Handlers
-  const handlePrevMonth = () => {
-    setCurrentMonthIdx(prev => (prev > 0 ? prev - 1 : MONTHS_CONFIG.length - 1))
-    setSelectedEventId(null)
-  }
-
-  const handleNextMonth = () => {
-    setCurrentMonthIdx(prev => (prev < MONTHS_CONFIG.length - 1 ? prev + 1 : 0))
-    setSelectedEventId(null)
-  }
+  const eventsByMonth = useMemo(() => {
+    const map = {}
+    MONTHS_CONFIG.forEach(m => { map[m.name] = [] })
+    EVENT_DATA.forEach(e => { if (map[e.month]) map[e.month].push(e) })
+    return map
+  }, [])
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-      {/* Dynamic Month Selector Header */}
-      <div className="flex items-center justify-between gap-4 mb-8 glass-panel px-6 py-4 rounded-2xl border border-black/5 dark:border-white/10">
-        <button
-          onClick={handlePrevMonth}
-          className="p-2 rounded-xl bg-white/40 dark:bg-white/5 border border-black/5 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300"
-          aria-label="Previous month"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-
-        <div className="text-center">
-          <h2 className="text-2xl font-nexa font-extrabold tracking-wide uppercase text-slate-800 dark:text-white transition-colors duration-300">
-            {activeMonth.name} {activeMonth.year}
-          </h2>
-          <p className="text-[10px] sm:text-xs text-slate-500 dark:text-white/40 font-semibold tracking-widest uppercase mt-0.5">
-            Active Month View
-          </p>
-        </div>
-
-        <button
-          onClick={handleNextMonth}
-          className="p-2 rounded-xl bg-white/40 dark:bg-white/5 border border-black/5 dark:border-white/10 hover:bg-white/80 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all duration-300"
-          aria-label="Next month"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Main Split Layout: Calendar Grid (Left) & Detailed Info (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Calendar Grid */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="glass-panel p-6 rounded-3xl border border-black/5 dark:border-white/10 shadow-sm relative overflow-hidden">
-            {/* Visual indicators mapping summary */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-black/5 dark:border-white/10 text-xs">
-              <span className="font-semibold text-slate-600 dark:text-white/70 uppercase tracking-wider">Legend</span>
-              <div className="flex flex-wrap gap-3">
-                <span className="flex items-center gap-1.5 text-slate-600 dark:text-white/60 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> CSR
-                </span>
-                <span className="flex items-center gap-1.5 text-slate-600 dark:text-white/60 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Levitas
-                </span>
-                <span className="flex items-center gap-1.5 text-slate-600 dark:text-white/60 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Festival
-                </span>
-                <span className="flex items-center gap-1.5 text-slate-600 dark:text-white/60 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Gravitas
-                </span>
-              </div>
+    <div className="w-full max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      {/* Hero intro — GenZ energy */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-panel rounded-2xl p-5 sm:p-6 mb-8"
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-brand-blue/6 dark:bg-sky-500/15 text-brand-blue dark:text-sky-400 border border-brand-blue/8 dark:border-sky-500/20 shrink-0">
+              <CalendarRange className="w-6 h-6" />
             </div>
-
-            {/* Days of Week Header */}
-            <div className="grid grid-cols-7 gap-2 mb-3 text-center">
-              {DAYS_OF_WEEK.map(day => (
-                <div 
-                  key={day} 
-                  className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-white/30 py-1"
-                >
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* Calendar Grid Cells */}
-            <div className="grid grid-cols-7 gap-2.5">
-              {gridCells.map((cell, idx) => {
-                const hasEvents = cell.events.length > 0
-                // Check if current cell contains the active selected event
-                const isCellSelected = cell.events.some(e => e.id === selectedEventId)
-                
-                // Color dots class list for the day
-                const primaryEvent = cell.events[0]
-                const dotColorClass = primaryEvent ? categoryColors[primaryEvent.category] : ''
-
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => {
-                      if (hasEvents) {
-                        setSelectedEventId(cell.events[0].id)
-                      }
-                    }}
-                    className={`aspect-square sm:aspect-video md:aspect-square flex flex-col justify-between p-2 rounded-2xl border transition-all duration-300 relative ${
-                      cell.isPlaceholder
-                        ? "border-transparent bg-transparent opacity-0 pointer-events-none"
-                        : hasEvents
-                        ? `cursor-pointer ${
-                            isCellSelected
-                              ? "bg-white/80 dark:bg-white/10 border-slate-700 dark:border-white/30 scale-105 shadow-md"
-                              : "bg-white/40 dark:bg-white/3 hover:bg-white/60 dark:hover:bg-white/5 border-black/5 dark:border-white/5 hover:scale-[1.02]"
-                          }`
-                        : "border-black/[0.02] dark:border-white/[0.02] bg-black/[0.01] dark:bg-white/[0.01] text-slate-400 dark:text-white/20 select-none"
-                    }`}
-                  >
-                    {/* Day Number */}
-                    <span className={`text-xs sm:text-sm font-extrabold ${
-                      hasEvents 
-                        ? "text-slate-800 dark:text-white" 
-                        : "text-slate-400 dark:text-white/15"
-                    }`}>
-                      {cell.dayNumber}
-                    </span>
-
-                    {/* Event indicators */}
-                    {hasEvents && (
-                      <div className="flex flex-col gap-1 mt-1">
-                        {/* Mobile: Mini indicator dot */}
-                        <div className="flex items-center gap-1">
-                          {cell.events.map((event, eventIdx) => {
-                            const catColor = categoryColors[event.category]?.split(' ')[0]
-                            return (
-                              <span 
-                                key={eventIdx} 
-                                className={`w-2 h-2 rounded-full ${catColor} shadow-sm`}
-                                title={event.title}
-                              ></span>
-                            )
-                          })}
-                        </div>
-                        {/* Desktop: Tiny title preview */}
-                        <span className="hidden md:block text-[9px] font-semibold truncate leading-none text-slate-600 dark:text-white/60">
-                          {cell.events[0].title.slice(0, 12)}...
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+            <div>
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white leading-tight">
+                Your year at ILH, mapped out 🗺️
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-xl">
+                From freshers to fiesta, garba nights to football leagues — we&apos;ve got the whole vibe calendar right here. 
+                Tap any highlighted date to see what&apos;s popping. No FOMO allowed. 🚫
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Event Details Panel */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Main Month Events Summary Card */}
-          <div className="glass-panel p-6 rounded-3xl border border-black/5 dark:border-white/10 relative overflow-hidden">
-            <h3 className="text-lg font-nexa font-extrabold tracking-wide uppercase text-slate-800 dark:text-white mb-4 border-b border-black/5 dark:border-white/10 pb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Month Highlights ({monthEvents.length})</span>
-            </h3>
-
-            {/* List of mappable events in this month */}
-            {gridEvents.length > 0 && (
-              <div className="space-y-4 mb-6">
-                <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase tracking-widest font-extrabold">Scheduled Events</p>
-                <div className="space-y-3">
-                  {gridEvents.map((event, idx) => {
-                    const isSelected = selectedEventId === event.id
-                    return (
-                      <div
-                        key={event.id}
-                        onClick={() => setSelectedEventId(isSelected ? null : event.id)}
-                        className={`p-4 rounded-2xl border transition-all duration-300 cursor-pointer ${
-                          isSelected
-                            ? "bg-brand-blue/10 dark:bg-white/10 border-brand-blue/40 dark:border-white/30 shadow-sm"
-                            : "bg-white/30 dark:bg-white/2 border-black/5 dark:border-white/5 hover:bg-white/50 dark:hover:bg-white/5"
-                        }`}
-                      >
-                        <EventCard event={event} index={idx} isMini={true} />
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Flexible / TBD events in this month */}
-            {tbdEvents.length > 0 && (
-              <div className="space-y-4">
-                <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase tracking-widest font-extrabold">Flexible & TBD Events</p>
-                <div className="space-y-3">
-                  {tbdEvents.map((event, idx) => (
-                    <div
-                      key={event.id}
-                      className="p-4 rounded-2xl border bg-white/30 dark:bg-white/2 border-black/5 dark:border-white/5 hover:bg-white/50 dark:hover:bg-white/5 transition-all duration-300"
-                    >
-                      <EventCard event={event} index={idx} isMini={true} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {monthEvents.length === 0 && (
-              <div className="text-center py-12 text-slate-400 dark:text-white/30">
-                No events scheduled for this month.
-              </div>
-            )}
+          {/* Legend */}
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-semibold shrink-0 bg-white/40 dark:bg-white/5 px-4 py-2.5 rounded-xl border border-slate-200/50 dark:border-white/8">
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> CSR
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Levitas
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Festival
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-500"></span> Gravitas
+            </span>
           </div>
         </div>
+      </motion.div>
+
+      {/* All Months — 2 columns desktop, 1 column mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+        {MONTHS_CONFIG.map((mc, i) => (
+          <MonthBlock key={mc.name} monthConfig={mc} events={eventsByMonth[mc.name]} index={i} />
+        ))}
       </div>
     </div>
   )
