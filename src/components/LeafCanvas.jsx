@@ -37,7 +37,7 @@ function Leaf({ texturePath, position, scale, rotSpeed, floatSpeed, floatRange, 
         <meshStandardMaterial
           map={texture}
           transparent
-          opacity={0.58}
+          opacity={0.85}
           depthWrite={false}
           side={THREE.DoubleSide}
           roughness={0.8}
@@ -70,7 +70,7 @@ function Orb({ position, color, size }) {
         emissive={color}
         emissiveIntensity={1.0}
         transparent
-        opacity={0.35}
+        opacity={0.65}
         roughness={1}
       />
     </mesh>
